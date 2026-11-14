@@ -1,11 +1,7 @@
-name: Crawl US PE After Market Close +10min
+# .github/workflows/crawl.yml
+name: Crawl US PE Clean
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
-  # 定时：美股收盘后10分钟自动跑（UTC时间，你后面可以再调这个时间）
-  schedule:
-    - cron: '30 22 * * 1-5'
 
 jobs:
   run_crawl:
@@ -14,19 +10,29 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install all required packages
-        run: python3 -m pip install requests beautifulsoup4 openpyxl
+      - name: Install dependencies
+        run: pip install pandas openpyxl requests
 
-      - name: Run crawler
-        run: python3 crawl.py
+      - name: Run clean crawl
+        run: python crawl.py
 
-      - name: Upload Excel file
+      - name: Check if result exists
+        id: check_file
+        run: |
+          if [ -f "pe_result.xlsx" ]; then
+            echo "UPLOAD=yes" >> $GITHUB_ENV
+          else
+            echo "UPLOAD=no" >> $GITHUB_ENV
+          fi
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
+        if: env.UPLOAD == 'yes'
         with:
-          name: 美股PE结果文件
-          path: 美股PE.xlsx
+          name: 美股 PE 结果文件
+          path: pe_result.xlsx
