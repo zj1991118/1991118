@@ -1,18 +1,48 @@
-name: Crawl Test
+name: Crawl US PE After Market Close +10min
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches: [main]
+  workflow_dispatch:   # 手动按钮触发测试
+  schedule:
+    # ==============================================
+    # 【人工切换定时】
+    # 夏令：每年 3 月第二个周日 ～ 11 月第一个周日
+    #        抓取：美东 16:10｜北京时间 04:10｜UTC 20:10
+    #        cron： 10 20 * * *
+    # 冬令：其余时间
+    #        抓取：美东 16:10｜北京时间 05:10｜UTC 21:10
+    #        cron： 10 21 * * *
+    # 使用方法：当前不用的那一行前面加 # 注释
+    # ==============================================
+    - cron: '10 21 * * *'
+    # - cron: '10 20 * * *'
 
 jobs:
-  run-crawl:
+  run_crawl:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Install requests
-        run: pip install requests
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas openpyxl requests beautifulsoup4 numpy
 
       - name: Run crawler
         run: python crawl.py
+
+      - name: Commit & Push
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add "PE.xlsx"
+          git commit -m "Auto update PE data $(date '+%Y-%m-%d')" || echo "No new data to commit"
+          git push
