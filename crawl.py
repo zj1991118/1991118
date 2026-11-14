@@ -1,52 +1,52 @@
 # crawl.py
 import pandas as pd
 import requests
+from bs4 import BeautifulSoup
 from pathlib import Path
 
-# 输出文件，只用相对路径
 OUTPUT_FILE = Path("pe_result.xlsx")
 
 def clear_old_output():
-    """清除上次遗留文件"""
     if OUTPUT_FILE.exists():
         OUTPUT_FILE.unlink()
         print(f"✅ 已清除旧文件：{OUTPUT_FILE.name}")
 
-def fetch_raw_data():
-    """在这里填入真实数据源链接"""
-    url = "https://你的真实数据源地址"
+def fetch_page_html():
+    url = "https://worldperatio.com"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
     try:
-        resp = requests.get(url, timeout=30)
+        resp = requests.get(url, headers=headers, timeout=30)
         resp.raise_for_status()
-        raw = resp.json()
-        print(f"📥 原始获取条数：{len(raw)}")
-        return raw
+        print(f"📥 网页获取成功，长度：{len(resp.text)}")
+        return resp.text
     except Exception as e:
-        print(f"❌ 请求数据源失败：{e}")
-        return []
+        print(f"❌ 请求网页失败：{e}")
+        return ""
 
-def get_latest_record(raw_list):
-    """取最新一条记录"""
-    if not raw_list:
+def parse_pe_table(html):
+    if not html:
         return None
-    df_raw = pd.DataFrame(raw_list)
-    date_col = "date"
-    df_raw[date_col] = pd.to_datetime(df_raw[date_col])
-    df_sorted = df_raw.sort_values(by=date_col, ascending=False)
-    latest_row = df_sorted.head(1)
-    print(f"📌 抓到最新一条，日期：{latest_row.iloc[0][date_col]}")
-    return latest_row
+    soup = BeautifulSoup(html, "html.parser")
+    # 找到页面里的PE表格
+    table = soup.find("table")
+    if not table:
+        print("⚠️ 页面里没有找到表格！")
+        return None
+    df = pd.read_html(str(table))[0]
+    print(f"📌 抓到表格，一共 {len(df)} 行数据")
+    return df
 
 def save_result(df):
-    """保存结果，无数据不生成文件"""
     if df is None or len(df) == 0:
-        print("⚠️ 没有抓到有效最新记录，不生成输出文件")
+        print("⚠️ 没有抓到有效表格数据，不生成输出文件")
         return
     df.to_excel(OUTPUT_FILE, index=False, engine="openpyxl")
-    print(f"✅ 已保存最新单条记录到 pe_result.xlsx")
+    print(f"✅ 已保存全部PE表格到 pe_result.xlsx")
 
 if __name__ == "__main__":
     clear_old_output()
-    raw_data = fetch_raw_data()
-    latest = get_latest_record(raw_data)
-    save_result(latest)
+    html = fetch_page_html()
+    df_data = parse_pe_table(html)
+    save_result(df_data)
