@@ -29,12 +29,12 @@ def parse_pe_table(html):
     if not html:
         return None
     soup = BeautifulSoup(html, "html.parser")
-    # 找到页面里的PE表格
     table = soup.find("table")
     if not table:
         print("⚠️ 页面里没有找到表格！")
         return None
-    df = pd.read_html(str(table))[0]
+    # 使用内置 html.parser，不需要 lxml
+    df = pd.read_html(str(table), flavor="html.parser")[0]
     print(f"📌 抓到表格，一共 {len(df)} 行数据")
     return df
 
@@ -43,7 +43,7 @@ def save_result(df):
         print("⚠️ 没有抓到有效表格数据，不生成输出文件")
         return
     df.to_excel(OUTPUT_FILE, index=False, engine="openpyxl")
-    print(f"✅ 已保存全部PE表格到 pe_result.xlsx")
+    print(f"✅ 已保存全部 PE 表格到 pe_result.xlsx")
 
 if __name__ == "__main__":
     clear_old_output()
