@@ -28,13 +28,12 @@ def fetch_page_html():
 def parse_pe_table(html):
     if not html:
         return None
-    soup = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(html, "lxml")
     table = soup.find("table")
     if not table:
         print("⚠️ 页面里没有找到表格！")
         return None
-    # 使用内置 html.parser，不需要 lxml
-    df = pd.read_html(str(table), flavor="html.parser")[0]
+    df = pd.read_html(str(table), flavor="lxml")[0]
     print(f"📌 抓到表格，一共 {len(df)} 行数据")
     return df
 
