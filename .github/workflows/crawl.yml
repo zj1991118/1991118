@@ -15,7 +15,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install pandas openpyxl requests
+        run: pip install pandas openpyxl requests beautifulsoup4
 
       - name: Run clean crawl
         run: python crawl.py
@@ -33,5 +33,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: env.UPLOAD == 'yes'
         with:
-          name: 美股 PE 结果文件
+          name: 指数PE结果表
           path: pe_result.xlsx
