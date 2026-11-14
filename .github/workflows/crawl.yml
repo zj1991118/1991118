@@ -1,28 +1,18 @@
-name: Crawl Data
+name: Crawl Test
 on:
-  schedule:
-    - cron: '0 3 * * *'
+  push:
+    branches: [ main ]
   workflow_dispatch:
+
 jobs:
-  run:
+  run-crawl:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Set Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install package
+
+      - name: Install requests
         run: pip install requests
-      - name: Run script
+
+      - name: Run crawler
         run: python crawl.py
-      - name: Commit & Push
-        run: |
-          git config --local user.email "auto@example.com"
-          git config --local user.name "Auto Bot"
-          git add .
-          git commit -m "Auto save data" || true
-          git push || true
