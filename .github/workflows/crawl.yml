@@ -33,5 +33,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: env.UPLOAD == 'yes'
         with:
-          name: 指数PE结果表
+          name: 指数 PE 结果表
           path: pe_result.xlsx
